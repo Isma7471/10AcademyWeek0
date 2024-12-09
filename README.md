@@ -21,6 +21,7 @@ This project aims to:
 - **Matplotlib & Seaborn**: For creating visualizations.
 - **NumPy**: For numerical operations.
 - **Plotly (optional)**: For interactive visualizations and charts.
+- Seaborn
 
 ## Dataset
 The dataset contains solar radiation data collected from stations located across **Benin**, **Togo**, and **Sierra Leone**. These datasets include crucial variables such as Global Horizontal Irradiance (GHI), Direct Normal Irradiance (DNI), Diffuse Horizontal Irradiance (DHI), ambient temperature (Tamb), module temperatures (ModA, ModB), wind speed (WS), wind direction (WD), relative humidity (RH), and barometric pressure (BP). These parameters provide a holistic view of the solar resource and its influencing factors.
