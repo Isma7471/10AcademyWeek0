@@ -5,14 +5,29 @@ import seaborn as sns
 import numpy as np
 from matplotlib import cm
 
-# Load data (Assuming you have already loaded the Benin dataset)
-# For example, replace with your dataset loading
-# Benin_data = pd.read_csv('path_to_benin_data.csv')
-# Example: Benin_data = pd.DataFrame(your_benin_data)
+
+# Sidebar navigation
+st.sidebar.title("Navigation")
+st.sidebar.markdown("### Upload your file")
+
+# Create file uploader widget
+uploaded_file = st.sidebar.file_uploader("Drag and drop your CSV file here", type=["csv"])
+
+# Check if a file is uploaded
+if uploaded_file is not None:
+    # Read the CSV file using pandas
+    Benin_data = pd.read_csv(uploaded_file)
+    
+    # Display the dataframe
+    st.title("Benin Data Analysis")
+    st.dataframe(Benin_data.head())  # Show the first few rows of the dataset
+else:
+    st.info("Please upload a CSV file to analyze.")
+
+# Additional app functionality here
+# For example, analyzing and visualizing the data, or displaying insights
 
 # Set up Streamlit
-st.title('Benin Solar and Climate Data Dashboard')
-st.sidebar.header('Dashboard Navigation')
 
 # Sidebar options
 options = ['Overview', 'Data Cleaning', 'Boxplots', 'Histograms', 'Time Series Analysis', 'Bivariate Analysis', 'Bubble Chart']
