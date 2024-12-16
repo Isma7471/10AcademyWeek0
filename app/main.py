@@ -3,94 +3,141 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-from datetime import datetime
-
-# Title and Introduction
-st.title("Solar Farm Data Analysis Dashboard")
-st.markdown("Explore solar radiation data from Benin, Sierra Leone, and Togo.")
-
-# Data Loading and Preprocessing
-@st.cache_data  # Cache the data to improve performance
-def load_and_preprocess_data(benin_file, sl_file, togo_file):
-    try:
-        benin_data = pd.read_csv(benin_file)  
-        sl_data = pd.read_csv(sl_file)
-        togo_data = pd.read_csv(togo_file)
-
-        # Combine datasets (add a 'country' column)
-        benin_data['country'] = 'Benin'
-        sl_data['country'] = 'Sierra Leone'
-        togo_data['country'] = 'Togo'
-        all_data = pd.concat([benin_data, sl_data, togo_data])
-
-        # Convert 'Timestamp' to datetime objects
-        all_data['Timestamp'] = pd.to_datetime(all_data['Timestamp'])
-
-        # Data Cleaning (handle missing values - basic example)
-        for col in ['GHI', 'DNI', 'DHI', 'Tamb', 'ModA', 'ModB', 'WS', 'RH', 'BP']:
-            all_data[col] = all_data.groupby('country')[col].transform(lambda x: x.fillna(x.mean()))
-
-        return all_data
-    except Exception as e:  # Handle file upload errors
-        st.error(f"Error loading data: {e}")
-        return None
-
-# File Uploaders
-benin_file = st.file_uploader("Upload Benin Data (CSV)", type="csv")
-sl_file = st.file_uploader("Upload Sierra Leone Data (CSV)", type="csv")
-togo_file = st.file_uploader("Upload Togo Data (CSV)", type="csv")
-
-# Load data if files are uploaded
-if benin_file and sl_file and togo_file:
-    all_data = load_and_preprocess_data(benin_file, sl_file, togo_file)
-
-    if all_data is not None:
-
-        # Country Selection
-        selected_countries = st.multiselect("Select Countries", all_data['country'].unique(), all_data['country'].unique())
-        filtered_data = all_data[all_data['country'].isin(selected_countries)]
-
-        # Date Range Selection
-        start_date = st.date_input("Start Date", value=filtered_data['Timestamp'].min().date())
-        end_date = st.date_input("End Date", value=filtered_data['Timestamp'].max().date())
-
-        filtered_data = filtered_data[(filtered_data['Timestamp'].dt.date >= start_date) & (filtered_data['Timestamp'].dt.date <= end_date)]
+from matplotlib import cm
 
 
-        # Variable Selection
-        selected_variable = st.selectbox("Select Variable", ['GHI', 'DNI', 'DHI', 'Tamb', 'ModA', 'ModB', 'WS', 'RH', 'BP'])
+# Sidebar navigation
+st.sidebar.title("Navigation")
+st.sidebar.markdown("### Upload your file")
 
-        # Visualization Type
-        visualization_type = st.radio("Select Visualization", ['Line Chart', 'Histogram', 'Scatter Plot'])
+# Create file uploader widget
+uploaded_file = st.sidebar.file_uploader("Drag and drop your CSV file here", type=["csv"])
 
-# Create Visualizations
-        if visualization_type == 'Line Chart':
-            plt.figure(figsize=(12, 6))
-            sns.lineplot(x='Timestamp', y=selected_variable, data=filtered_data, hue='country')
-            plt.title(f"{selected_variable} Over Time")
-            plt.xticks(rotation=45)
-            st.pyplot(plt)
-
-        elif visualization_type == 'Histogram':
-            plt.figure(figsize=(8, 6))  # Adjust figure size for better visualization
-            plt.hist(filtered_data[selected_variable], bins=20) # Increased bins for more detail
-            plt.title(f"Histogram of {selected_variable}")
-            plt.xlabel(selected_variable)
-            plt.ylabel('Frequency')
-            st.pyplot(plt)
-
-        elif visualization_type == 'Scatter Plot':
-            x_variable = st.selectbox("Select X-axis Variable", ['GHI', 'DNI', 'DHI', 'Tamb', 'ModA', 'ModB', 'WS', 'RH', 'BP'])
-            y_variable = st.selectbox("Select Y-axis Variable", ['GHI', 'DNI', 'DHI', 'Tamb', 'ModA', 'ModB', 'WS', 'RH', 'BP'], index=1) # Default to second option
-
-            plt.figure(figsize=(8, 6))
-            sns.scatterplot(x=x_variable, y=y_variable, data=filtered_data, hue='country')
-            plt.title(f"{x_variable} vs. {y_variable}")
-            st.pyplot(plt)
-
-        # Display Data (optional)
-        if st.checkbox("Show Data"):
-            st.dataframe(filtered_data)
-
+# Check if a file is uploaded
+if uploaded_file is not None:
+    # Read the CSV file using pandas
+    Benin_data = pd.read_csv(uploaded_file)
+    
+    # Display the dataframe
+    st.title("Benin Data Analysis")
+    st.dataframe(Benin_data.head())  # Show the first few rows of the dataset
 else:
-    st.warning("Please upload all three CSV files to begin.")
+    st.info("Please upload a CSV file to analyze.")
+
+# Additional app functionality here
+# For example, analyzing and visualizing the data, or displaying insights
+
+# Set up Streamlit
+
+# Sidebar options
+options = ['Overview', 'Data Cleaning', 'Boxplots', 'Histograms', 'Time Series Analysis', 'Bivariate Analysis', 'Bubble Chart']
+selection = st.sidebar.radio('Choose a section', options)
+
+# Overview Section
+if selection == 'Overview':
+    st.header('Overview of Benin Data')
+    st.write("This dashboard provides insights into Benin's weather and solar data.")
+    st.write("Columns: GHI, DNI, DHI, Tamb, RH, WS, etc.")
+    st.write("The data is analyzed for different patterns including time series analysis, correlations, and more.")
+    
+    st.write('Data Preview:')
+    st.dataframe(Benin_data.head())
+
+# Data Cleaning Section
+elif selection == 'Data Cleaning':
+    st.header('Data Cleaning for Benin Data')
+    st.write("Here, we demonstrate the effect of cleaning the data by removing duplicates and handling missing values.")
+    
+    # Cleaning process
+    Benin_data_cleaned = Benin_data.drop_duplicates()
+    Benin_data_cleaned.fillna(Benin_data_cleaned.mean(), inplace=True)
+    
+    st.write("Cleaned Data Preview:")
+    st.dataframe(Benin_data_cleaned.head())
+    
+    st.write(f"Original Data Shape: {Benin_data.shape}")
+    st.write(f"Cleaned Data Shape: {Benin_data_cleaned.shape}")
+
+# Boxplots Section
+elif selection == 'Boxplots':
+    st.header('Boxplot Analysis')
+    st.write("Visualizing the distributions of different columns using boxplots.")
+    
+    # Boxplot for selected columns
+    cols_to_plot = ['GHI', 'DNI', 'DHI', 'ModA', 'ModB', 'Tamb', 'RH', 'WS', 'WSgust', 'WSstdev']
+    box = Benin_data[cols_to_plot].plot(kind='box', figsize=(12, 6), patch_artist=True)
+    plt.title('Boxplots of Various Features')
+    st.pyplot()
+
+# Histograms Section
+elif selection == 'Histograms':
+    st.header('Histogram Analysis')
+    st.write("Visualizing the distributions of data columns using histograms.")
+    
+    # Histograms for selected columns
+    fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(12, 8))
+    cols_to_plot = ['GHI', 'DNI', 'DHI', 'Tamb', 'RH', 'WS']
+    for i, col in enumerate(cols_to_plot):
+        ax = axes[i // 3, i % 3]
+        Benin_data[col].plot(kind='hist', ax=ax, bins=20, color='orange', edgecolor='black', alpha=0.7)
+        ax.set_title(f'{col} Distribution')
+        ax.set_xlabel(col)
+    plt.tight_layout()
+    st.pyplot()
+
+# Time Series Analysis Section
+elif selection == 'Time Series Analysis':
+    st.header('Time Series Analysis for Benin')
+    st.write("Time series analysis on GHI, DHI, DNI, and Temperature over months and days.")
+    
+    # Convert 'Timestamp' to datetime (if not done already)
+    Benin_data['Timestamp'] = pd.to_datetime(Benin_data['Timestamp'])
+    
+    # Monthly Time Series for GHI, DHI, DNI, and Tamb
+    monthly_data = Benin_data.resample('M', on='Timestamp').mean()
+    
+    fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(12, 8))
+    cols_to_plot = ['GHI', 'DHI', 'DNI', 'Tamb']
+    for i, col in enumerate(cols_to_plot):
+        ax = axes[i // 2, i % 2]
+        monthly_data[col].plot(ax=ax, title=f'{col} - Monthly Average')
+        ax.set_xlabel('Month')
+        ax.set_ylabel(col)
+    plt.tight_layout()
+    st.pyplot()
+
+# Bivariate Analysis Section
+elif selection == 'Bivariate Analysis':
+    st.header('Bivariate Analysis')
+    st.write("Correlation heatmap and scatter plots for understanding relationships between features.")
+    
+    # Correlation heatmap
+    corr_matrix = Benin_data.corr()
+    plt.figure(figsize=(12, 8))
+    sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5)
+    st.pyplot()
+    
+    # Scatter plot of two features (e.g., GHI vs Tamb)
+    sns.scatterplot(data=Benin_data, x='GHI', y='Tamb', color='orange')
+    plt.title('GHI vs Tamb Scatter Plot')
+    plt.xlabel('GHI')
+    plt.ylabel('Tamb')
+    st.pyplot()
+
+# Bubble Chart Section
+elif selection == 'Bubble Chart':
+    st.header('Bubble Chart: Temperature vs GHI with Wind Speed as Bubble Size')
+    st.write("The bubble size represents wind speed (WS) while the X and Y axes represent temperature (Tamb) and GHI respectively.")
+    
+    # Bubble chart
+    plt.figure(figsize=(10, 6))
+    sns.scatterplot(x=Benin_data['Tamb'], y=Benin_data['GHI'], size=Benin_data['WS'], sizes=(20, 200), color='orange', legend=None, alpha=0.6)
+    plt.title('Bubble Chart: Temperature vs GHI with Wind Speed as Bubble Size')
+    plt.xlabel('Temperature (°C)')
+    plt.ylabel('Global Horizontal Irradiance (GHI)')
+    st.pyplot()
+
+# Footer Section
+st.sidebar.markdown("---")
+st.sidebar.markdown("Created with ❤️ by [Esmael Uta]")
+
